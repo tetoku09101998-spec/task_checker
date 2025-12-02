@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>週間タスクスコアトラッカー - ダーク</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- GitHubダーク風カラースキーム -->
+  <meta name="color-scheme" content="dark light" />
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg-elevated: #161b22;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-strong: #238636;
+      --danger: #f85149;
+      --table-header: #161b22;
+      --table-row-alt: #0d1117;
+      --shadow-soft: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: radial-gradient(circle at top, #161b22 0, #0d1117 40%, #010409 100%);
+      color: var(--text);
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .week-info {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .week-range {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .week-score {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .week-score span {
+      font-size: 18px;
+      color: var(--accent);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      max-width: 1100px;
+    }
+
+    @media (min-width: 960px) {
+      .layout {
+        grid-template-columns: minmax(260px, 320px) 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-elevated);
+      border-radius: 12px;
+      padding: 14px 16px 16px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 0.8fr;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    @media (max-width: 600px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    label {
+      font-size: 13px;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 6px 8px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #0d1117;
+      color: var(--text);
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+      background: #02040a;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: 1px solid #1f6feb;
+      background: #1f6feb;
+      color: #f0f6fc;
+      font-size: 13px;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .btn-primary:hover {
+      background: #388bfd;
+      border-color: #388bfd;
+    }
+
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+
+    .btn-ghost {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 11px;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 999px;
+    }
+
+    .btn-ghost:hover {
+      background: #21262d;
+      color: var(--text);
+    }
+
+    .btn-ghost.danger {
+      color: var(--danger);
+    }
+
+    .btn-ghost.danger:hover {
+      background: #21111c;
+    }
+
+    .form-note {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 6px 4px;
+      text-align: center;
+    }
+
+    th {
+      font-weight: 600;
+      background: var(--table-header);
+      color: var(--text-muted);
+    }
+
+    tr:nth-child(even) {
+      background: rgba(13, 17, 23, 0.5);
+    }
+
+    tr:nth-child(odd) {
+      background: rgba(22, 27, 34, 0.8);
+    }
+
+    th.task-col,
+    td.task-col {
+      text-align: left;
+      padding-left: 6px;
+    }
+
+    th.target-col,
+    td.target-col {
+      width: 80px;
+    }
+
+    th.score-col,
+    td.score-col {
+      width: 90px;
+    }
+
+    .day-label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .task-name {
+      font-size: 13px;
+    }
+
+    .score-text {
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    .score-text span {
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .overall-row td {
+      border-top: 1px solid var(--border);
+      font-weight: 600;
+      background: #151b23;
+    }
+
+    .overall-label {
+      text-align: right;
+      font-size: 12px;
+      padding-right: 8px;
+      color: var(--text-muted);
+    }
+
+    .overall-value {
+      font-size: 14px;
+      color: var(--accent);
+    }
+
+    .empty-msg {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    .small-muted {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    .checkbox-cell input[type="checkbox"] {
+      transform: scale(1.05);
+      cursor: pointer;
+    }
+
+    .app-shell {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <h1>週間タスクスコアトラッカー</h1>
+    <div class="subtitle">
+      「1週間でどれだけやるか」を決めて、自分の達成度をスコア化するためのダークモードツール。
+    </div>
+
+    <div class="week-info">
+      <div class="week-range" id="weekRangeLabel"></div>
+      <div class="week-score">
+        今週のスコア：
+        <span id="overallScore">-</span> %
+      </div>
+    </div>
+
+    <div class="layout">
+      <!-- 左：タスク追加フォーム -->
+      <div class="card">
+        <div class="card-title">タスク追加</div>
+        <form id="taskForm">
+          <div class="form-grid">
+            <div>
+              <label for="taskNameInput">タスク名</label>
+              <input type="text" id="taskNameInput" placeholder="例：ギター練習、C言語勉強、散歩 など">
+            </div>
+            <div>
+              <label for="targetPerWeekInput">目標回数 / 週</label>
+              <input type="number" id="targetPerWeekInput" min="1" max="7" value="3">
+            </div>
+          </div>
+          <button type="submit" class="btn-primary">＋ タスクを追加</button>
+          <div class="form-note">
+            例）「筋トレ」＋ 目標3回/週 → 月水金にチェックをつけて管理、みたいな使い方。
+          </div>
+        </form>
+        <div class="small-muted">
+          ・タスク一覧はブラウザのローカルストレージに保存されます。<br>
+          ・チェック状況は「今週の月曜日〜日曜日」単位で保存されます。<br>
+          ・GitHub Pages にこのファイルを置けば、どこからでも同じページを開けます。
+        </div>
+      </div>
+
+      <!-- 右：一覧＋スコア -->
+      <div class="card">
+        <div class="card-title">今週のタスク一覧</div>
+        <div id="tableContainer"></div>
+        <div class="empty-msg" id="emptyMessage" style="display:none;">
+          まだタスクが登録されていません。左側からタスクを追加してください。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== 定数 =====
+    const TASKS_KEY = 'weeklyTasks_v1';
+    const WEEKDATA_PREFIX = 'weeklyData_v1_'; // + weekId
+
+    const DAY_LABELS = ['月', '火', '水', '木', '金', '土', '日'];
+
+    // ===== 日付まわり =====
+    function getCurrentWeekInfo() {
+      const today = new Date();
+      const d = new Date(today);
+      d.setHours(0,0,0,0);
+      const day = d.getDay(); // 0=Sun,1=Mon,...6=Sat
+      const diffToMonday = (day + 6) % 7; // Mon→0, Sun→6
+      d.setDate(d.getDate() - diffToMonday);
+      const start = new Date(d);
+      const end = new Date(d);
+      end.setDate(end.getDate() + 6);
+
+      const weekId = formatDateId(start); // yyyymmdd
+
+      return { weekId, start, end };
+    }
+
+    function formatDateId(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}${m}${d}`;
+    }
+
+    function formatDateLabel(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}/${m}/${d}`;
+    }
+
+    // ===== ローカルストレージ =====
+    function loadTasks() {
+      try {
+        const raw = localStorage.getItem(TASKS_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        console.warn('タスク読み込み失敗、新規から開始します。', e);
+        return [];
+      }
+    }
+
+    function saveTasks(tasks) {
+      try {
+        localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+      } catch (e) {
+        console.warn('タスク保存失敗', e);
+      }
+    }
+
+    function loadWeekData(weekId) {
+      const key = WEEKDATA_PREFIX + weekId;
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+      } catch (e) {
+        console.warn('週データ読み込み失敗', e);
+        return {};
+      }
+    }
+
+    function saveWeekData(weekId, weekData) {
+      const key = WEEKDATA_PREFIX + weekId;
+      try {
+        localStorage.setItem(key, JSON.stringify(weekData));
+      } catch (e) {
+        console.warn('週データ保存失敗', e);
+      }
+    }
+
+    // ===== 状態 =====
+    const weekInfo = getCurrentWeekInfo();
+    let tasks = loadTasks();
+    let weekData = loadWeekData(weekInfo.weekId);
+
+    // tasks: [{ id, name, target }]
+    // weekData: { [taskId]: [bool,bool,...7] }
+
+    // ===== DOM参照 =====
+    const weekRangeLabel = document.getElementById('weekRangeLabel');
+    const overallScoreEl = document.getElementById('overallScore');
+    const taskForm = document.getElementById('taskForm');
+    const taskNameInput = document.getElementById('taskNameInput');
+    const targetPerWeekInput = document.getElementById('targetPerWeekInput');
+    const tableContainer = document.getElementById('tableContainer');
+    const emptyMessage = document.getElementById('emptyMessage');
+
+    // ===== 初期表示 =====
+    init();
+
+    function init() {
+      weekRangeLabel.textContent =
+        `対象週：${formatDateLabel(weekInfo.start)} ～ ${formatDateLabel(weekInfo.end)}（月～日）`;
+
+      renderTable();
+      setupForm();
+    }
+
+    function setupForm() {
+      taskForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = taskNameInput.value.trim();
+        let target = Number(targetPerWeekInput.value);
+
+        if (!name) {
+          alert('タスク名を入力してください。');
+          return;
+        }
+        if (!Number.isFinite(target) || target < 1) {
+          target = 1;
+        }
+        if (target > 7) target = 7;
+
+        const newTask = {
+          id: `t_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+          name,
+          target
+        };
+
+        tasks.push(newTask);
+        saveTasks(tasks);
+
+        // 週データにも空の行を追加
+        weekData[newTask.id] = Array(7).fill(false);
+        saveWeekData(weekInfo.weekId, weekData);
+
+        taskNameInput.value = '';
+        targetPerWeekInput.value = String(target);
+        renderTable();
+      });
+    }
+
+    // ===== テーブル描画 =====
+    function renderTable() {
+      tableContainer.innerHTML = '';
+
+      if (!tasks.length) {
+        emptyMessage.style.display = 'block';
+        overallScoreEl.textContent = '-';
+        return;
+      }
+
+      emptyMessage.style.display = 'none';
+
+      const table = document.createElement('table');
+
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+
+      const thTask = document.createElement('th');
+      thTask.className = 'task-col';
+      thTask.textContent = 'タスク';
+      headerRow.appendChild(thTask);
+
+      const thTarget = document.createElement('th');
+      thTarget.className = 'target-col';
+      thTarget.textContent = '目標/週';
+      headerRow.appendChild(thTarget);
+
+      for (let i = 0; i < 7; i++) {
+        const thDay = document.createElement('th');
+        thDay.innerHTML = `<span class="day-label">${DAY_LABELS[i]}</span>`;
+        headerRow.appendChild(thDay);
+      }
+
+      const thScore = document.createElement('th');
+      thScore.className = 'score-col';
+      thScore.textContent = '達成状況';
+      headerRow.appendChild(thScore);
+
+      const thActions = document.createElement('th');
+      thActions.textContent = '操作';
+      headerRow.appendChild(thActions);
+
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+
+      let totalRatio = 0;
+      let countWithTarget = 0;
+
+      tasks.forEach(task => {
+        const row = document.createElement('tr');
+
+        const tdName = document.createElement('td');
+        tdName.className = 'task-col';
+        tdName.innerHTML = `<span class="task-name">${escapeHtml(task.name)}</span>`;
+        row.appendChild(tdName);
+
+        const tdTarget = document.createElement('td');
+        tdTarget.className = 'target-col';
+        tdTarget.textContent = `${task.target} 回`;
+        row.appendChild(tdTarget);
+
+        if (!Array.isArray(weekData[task.id])) {
+          weekData[task.id] = Array(7).fill(false);
+        }
+
+        let doneCount = 0;
+
+        for (let i = 0; i < 7; i++) {
+          const tdDay = document.createElement('td');
+          tdDay.className = 'checkbox-cell';
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.checked = !!weekData[task.id][i];
+
+          if (checkbox.checked) doneCount++;
+
+          checkbox.addEventListener('change', () => {
+            weekData[task.id][i] = checkbox.checked;
+            saveWeekData(weekInfo.weekId, weekData);
+            renderTable();
+          });
+
+          tdDay.appendChild(checkbox);
+          row.appendChild(tdDay);
+        }
+
+        const tdScore = document.createElement('td');
+        tdScore.className = 'score-col';
+        const ratio = task.target > 0
+          ? Math.min(doneCount / task.target, 1)
+          : 0;
+        const percent = Math.round(ratio * 100);
+        tdScore.innerHTML =
+          `<span class="score-text">${doneCount} / ${task.target} 回<br><span>${percent}</span>%</span>`;
+        row.appendChild(tdScore);
+
+        const tdActions = document.createElement('td');
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn-ghost danger';
+        delBtn.textContent = '削除';
+        delBtn.addEventListener('click', () => {
+          if (!confirm(`「${task.name}」を削除しますか？\n（タスク自体と今週のチェックが消えます）`)) return;
+          tasks = tasks.filter(t => t.id !== task.id);
+          saveTasks(tasks);
+          delete weekData[task.id];
+          saveWeekData(weekInfo.weekId, weekData);
+          renderTable();
+        });
+        tdActions.appendChild(delBtn);
+        row.appendChild(tdActions);
+
+        tbody.appendChild(row);
+
+        totalRatio += ratio;
+        countWithTarget++;
+      });
+
+      const overallRow = document.createElement('tr');
+      overallRow.className = 'overall-row';
+
+      const tdOverallLabel = document.createElement('td');
+      tdOverallLabel.colSpan = 2 + 7;
+      tdOverallLabel.className = 'overall-label';
+      tdOverallLabel.textContent = '全タスク平均達成率';
+      overallRow.appendChild(tdOverallLabel);
+
+      const tdOverallValue = document.createElement('td');
+      tdOverallValue.colSpan = 2;
+      tdOverallValue.className = 'overall-value';
+      const overallPercent =
+        countWithTarget > 0 ? Math.round((totalRatio / countWithTarget) * 100) : 0;
+      tdOverallValue.textContent = overallPercent + ' %';
+      overallRow.appendChild(tdOverallValue);
+
+      tbody.appendChild(overallRow);
+
+      table.appendChild(tbody);
+      tableContainer.appendChild(table);
+
+      overallScoreEl.textContent = overallPercent;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+  </script>
+</body>
+</html>
