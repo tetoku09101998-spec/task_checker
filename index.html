@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+  <link rel="manifest" href="manifest.json">
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(() => console.log("Service Worker 登録完了"))
+        .catch(e => console.log("SW登録エラー:", e));
+    }
+  </script>
   <meta charset="UTF-8" />
   <title>週間タスクスコアトラッカー - ダーク</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -644,3 +652,4 @@
   </script>
 </body>
 </html>
+
